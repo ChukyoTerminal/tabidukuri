@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tabizukuri.</title>
+  <meta name="viewport" content="width=400, initial-scale=1" />
+  <style>
+    body {
+      background: #f9f9f9;
+      font-family: sans-serif;
+    }
+    .container {
+      max-width: 400px;
+      margin: 40px auto;
+      padding: 24px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #fff;
+    }
+    h1 {
+      text-align: center;
+    }
+    .section {
+      margin: 24px 0;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 8px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+      cursor: pointer;
+    }
+    .center {
+      text-align: center;
+    }
+    .google-signin-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .google-signin-btn img {
+      width: 100%;
+      max-width: 320px;
+      height: auto;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Travel Plan.</h1>
+
+    <div class="section">
+      <h2>新規で部屋を作成</h2>
+      <input
+        type="text"
+        id="newRoomCode"
+        placeholder="新しい部屋コードを入力"
+      />
+      <button onclick="handleCreateRoom()">部屋を作成</button>
+    </div>
+
+    <div class="section">
+      <h2>部屋に参加</h2>
+      <input
+        type="text"
+        id="roomCode"
+        placeholder="部屋コードを入力"
+      />
+      <button onclick="handleJoinRoom()">参加する</button>
+    </div>
+
+    <div class="section center">
+      <button class="google-signin-btn" onclick="handleGoogleSignIn()" aria-label="Googleでサインイン">
+        <img src="https://developers.google.com/static/identity/images/branding_guide_do_2.png?hl=ja" alt="Googleでサインイン" />
+      </button>
+    </div>
+  </div>
+  <script>
+    function handleCreateRoom() {
+      const code = document.getElementById('newRoomCode').value;
+      alert(`新しい部屋コード「${code}」を作成します`);
+    }
+    function handleJoinRoom() {
+      const code = document.getElementById('roomCode').value;
+      alert(`部屋コード「${code}」で参加します`);
+    }
+    function handleGoogleSignIn() {
+      alert('Googleアカウントでサインインします');
+    }
+  </script>
+</body>
+</html>
