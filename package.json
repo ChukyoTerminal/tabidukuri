@@ -7,11 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "lint:fix": "next lint --fix"
+    "lint:fix": "next lint --fix",
+    "prisma:format": "prisma format",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev"
   },
   "dependencies": {
     "@next/third-parties": "^15.4.6",
     "@xyflow/react": "^12.8.4",
+    "@prisma/client": "6.14.0",
     "framer-motion": "12.23.12",
     "lucide-react": "^0.539.0",
     "next": "15.4.6",

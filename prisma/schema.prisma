@@ -1,0 +1,239 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum NoteType {
+  MAP // title: 住所,     content: Google Maps URL
+  TEXT // title: 任意,     content: 任意テキスト
+  URL // title: サイト名, content: URL
+}
+
+enum TransportationType {
+  WALKING
+  BICYCLE
+  CAR
+  BUS
+  TRAIN
+  SHINKANSEN
+  FERRY
+  AIRPLANE
+}
+
+model User {
+  id        BigInt   @id // Snowflake
+  email     String   @unique
+  name      String
+  imageHash String?  @map("image_hash")
+  isGuest   Boolean  @default(false) @map("is_guest")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  rooms          Room[]        @relation("UserRoom")
+  participations RoomMember[]  @relation("RoomMember")
+  roomComments   RoomComment[] @relation("RoomCommentAuthor")
+  roomNotes      RoomNote[]    @relation("RoomNoteAuthor")
+  nodeComments   NodeComment[] @relation("NodeCommentAuthor")
+  nodeNotes      NodeNote[]    @relation("NodeNoteAuthor")
+  edgeComments   EdgeComment[] @relation("EdgeCommentAuthor")
+  edgeNotes      EdgeNote[]    @relation("EdgeNoteAuthor")
+
+  @@map("users")
+}
+
+model Room {
+  id          BigInt   @id // Snowflake
+  ownerId     BigInt   @map("owner_id")
+  name        String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  owner       User             @relation("UserRoom", fields: [ownerId], references: [id])
+  members     RoomMember[]     @relation("Participation")
+  invitations RoomInvitation[] @relation("RoomInvitation")
+  comments    RoomComment[]    @relation("RoomComment")
+  notes       RoomNote[]       @relation("RoomNote")
+  nodes       Node[]           @relation("RoomNode")
+
+  @@map("rooms")
+}
+
+model RoomMember {
+  id        BigInt   @id // Snowflake
+  userId    BigInt   @map("user_id")
+  roomId    BigInt   @map("room_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  user User @relation("RoomMember", fields: [userId], references: [id])
+  room Room @relation("Participation", fields: [roomId], references: [id])
+
+  @@unique([userId, roomId])
+  @@map("room_members")
+}
+
+model RoomInvitation {
+  id          BigInt   @id // Snowflake
+  code        String   @unique
+  roomId      BigInt   @map("room_id")
+  targetEmail String?  @map("target_email")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  room Room @relation("RoomInvitation", fields: [roomId], references: [id])
+
+  @@map("room_invitations")
+}
+
+model RoomComment {
+  id        BigInt   @id // Snowflake
+  roomId    BigInt   @map("room_id")
+  authorId  BigInt   @map("author_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  room   Room @relation("RoomComment", fields: [roomId], references: [id])
+  author User @relation("RoomCommentAuthor", fields: [authorId], references: [id])
+
+  @@map("room_comments")
+}
+
+model RoomNote {
+  id        BigInt   @id // Snowflake
+  roomId    BigInt   @map("room_id")
+  authorId  BigInt   @map("author_id")
+  type      NoteType
+  title     String
+  content   String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  room   Room @relation("RoomNote", fields: [roomId], references: [id])
+  author User @relation("RoomNoteAuthor", fields: [authorId], references: [id])
+
+  @@map("room_notes")
+}
+
+model Node {
+  id          BigInt   @id // Snowflake
+  roomId      BigInt   @map("room_id")
+  name        String
+  description String?
+  x           Float    @default(0) @map("x_coordinate")
+  y           Float    @default(0) @map("y_coordinate")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  room     Room          @relation("RoomNode", fields: [roomId], references: [id])
+  comments NodeComment[] @relation("NodeComment")
+  notes    NodeNote[]    @relation("NodeNote")
+  edgeFrom Edge[]        @relation("EdgeFromNode")
+  edgeTo   Edge[]        @relation("EdgeToNode")
+
+  @@map("nodes")
+}
+
+model NodeComment {
+  id        BigInt   @id // Snowflake
+  nodeId    BigInt   @map("node_id")
+  authorId  BigInt   @map("author_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  node   Node @relation("NodeComment", fields: [nodeId], references: [id])
+  author User @relation("NodeCommentAuthor", fields: [authorId], references: [id])
+
+  @@map("node_comments")
+}
+
+model NodeNote {
+  id        BigInt   @id // Snowflake
+  nodeId    BigInt   @map("node_id")
+  authorId  BigInt   @map("author_id")
+  type      NoteType
+  title     String
+  content   String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  node   Node @relation("NodeNote", fields: [nodeId], references: [id])
+  author User @relation("NodeNoteAuthor", fields: [authorId], references: [id])
+
+  @@map("node_notes")
+}
+
+model TransportationHop {
+  id        BigInt             @id // Snowflake
+  type      TransportationType
+  from      String
+  to        String
+  nextHopId BigInt?            @unique @map("next_hop_id")
+  createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  nextHop     TransportationHop? @relation("NextHop", fields: [nextHopId], references: [id])
+  previousHop TransportationHop? @relation("NextHop")
+  edge        Edge?              @relation("TransportationHop")
+
+  @@map("transportation_hops")
+}
+
+model Edge {
+  id                  BigInt   @id // Snowflake
+  fromNodeId          BigInt   @map("from_node_id")
+  toNodeId            BigInt   @map("to_node_id")
+  transportationHopId BigInt?  @unique @map("transportation_hop_id")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt           DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  fromNode          Node               @relation("EdgeFromNode", fields: [fromNodeId], references: [id])
+  toNode            Node               @relation("EdgeToNode", fields: [toNodeId], references: [id])
+  transportationHop TransportationHop? @relation("TransportationHop", fields: [transportationHopId], references: [id])
+  comments          EdgeComment[]      @relation("EdgeComment")
+  notes             EdgeNote[]         @relation("EdgeNote")
+
+  @@map("edges")
+}
+
+model EdgeComment {
+  id        BigInt   @id // Snowflake
+  edgeId    BigInt   @map("edge_id")
+  authorId  BigInt   @map("author_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  edge   Edge @relation("EdgeComment", fields: [edgeId], references: [id])
+  author User @relation("EdgeCommentAuthor", fields: [authorId], references: [id])
+
+  @@map("edge_comments")
+}
+
+model EdgeNote {
+  id        BigInt   @id // Snowflake
+  edgeId    BigInt   @map("edge_id")
+  authorId  BigInt   @map("author_id")
+  type      NoteType
+  title     String
+  content   String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  edge   Edge @relation("EdgeNote", fields: [edgeId], references: [id])
+  author User @relation("EdgeNoteAuthor", fields: [authorId], references: [id])
+
+  @@map("edge_notes")
+}
