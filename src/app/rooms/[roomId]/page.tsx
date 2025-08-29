@@ -82,8 +82,32 @@ export default function App() {
           onRequestClose={() => setIsNodeModalOpen(false)}
           contentLabel="ノード追加"
         >
-          <h2 className="text-lg font-bold">ノードを追加</h2>
-          {/* ノード追加フォーム */}
+          <form className="flex flex-col gap-4 relative pb-20">
+            <label className="flex flex-col gap-1">
+              <span className="text-sm font-medium">場所</span>
+              <input
+                type="text"
+                name="place"
+                placeholder="場所を入力"
+                className="border rounded px-3 py-2 focus:outline-none focus:ring focus:border-sky-500"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-sm font-medium">説明</span>
+              <textarea
+                name="description"
+                placeholder="説明を入力"
+                rows={3}
+                className="border rounded px-3 py-2 focus:outline-none focus:ring focus:border-sky-500"
+              />
+            </label>
+            <button
+              type="submit"
+              className="absolute right-4 bottom-4 bg-sky-500 hover:bg-sky-600 text-white rounded-3xl shadow-lg px-6 py-3 font-bold text-lg z-30"
+            >
+              追加
+            </button>
+          </form>
         </Modal>
       )}
       <header className="fixed top-0 left-0 w-full p-4 bg-sky-500 shadow-md z-10">
