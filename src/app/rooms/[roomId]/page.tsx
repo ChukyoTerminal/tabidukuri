@@ -68,6 +68,7 @@ export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [isNodeModalOpen, setIsNodeModalOpen] = useState(false);
+  const [place, setPlace] = useState('');
 
   const onConnect: OnConnect = useCallback(
     (parameters) => setEdges((eds) => addEdge(parameters, eds)),
@@ -82,7 +83,20 @@ export default function App() {
           onRequestClose={() => setIsNodeModalOpen(false)}
           contentLabel="ノード追加"
         >
-          <form className="flex flex-col gap-4 relative pb-20">
+          <form className="flex flex-col gap-4 relative pb-20" onSubmit={e => {
+            e.preventDefault();
+            if (!place) return;
+            setNodes((nds) => {
+              return [...nds, {
+                id: (nds.length + 1).toString(),
+                position: { x: 0, y: 0 },
+                data: { label: place },
+                ...nodeDefaults,
+              }];
+            });
+            setIsNodeModalOpen(false);
+            setPlace('');
+          }}>
             <label className="flex flex-col gap-1">
               <span className="text-sm font-medium">場所</span>
               <input
@@ -90,6 +104,9 @@ export default function App() {
                 name="place"
                 placeholder="場所を入力"
                 className="border rounded px-3 py-2 focus:outline-none focus:ring focus:border-sky-500"
+                value={place}
+                onChange={e => setPlace(e.target.value)}
+                required
               />
             </label>
             <label className="flex flex-col gap-1">
@@ -104,6 +121,7 @@ export default function App() {
             <button
               type="submit"
               className="absolute right-4 bottom-4 bg-sky-500 hover:bg-sky-600 text-white rounded-3xl shadow-lg px-6 py-3 font-bold text-lg z-30"
+              disabled={!place}
             >
               追加
             </button>
