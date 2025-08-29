@@ -73,6 +73,7 @@ export default function App() {
   const [isNodeModalOpen, setIsNodeModalOpen] = useState(false);
   const [place, setPlace] = useState('');
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
 
   const onConnect: OnConnect = useCallback(
     (parameters) => {
@@ -151,6 +152,7 @@ export default function App() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeClick={(_, node) => setSelectedNode(node)}
+        onEdgeClick={(_, edge) => setSelectedEdge(edge)}
         fitView
         className="bg-background text-black"
       >
@@ -174,7 +176,23 @@ export default function App() {
           contentLabel={selectedNode.data?.label as string}
         >
           <div>
-            {/* TODO */}
+            {/* ノード情報 */}
+          </div>
+        </Modal>
+      )}
+
+      {/* エッジクリック時のエッジ情報表示モーダル */}
+      {selectedEdge && (
+        <Modal
+          isOpen={true}
+          onRequestClose={() => setSelectedEdge(null)}
+          contentLabel={selectedEdge.id}
+        >
+          <div>
+            <div className="font-bold mb-2">エッジ情報</div>
+            <div>ID: {selectedEdge.id}</div>
+            <div>Source: {selectedEdge.source}</div>
+            <div>Target: {selectedEdge.target}</div>
           </div>
         </Modal>
       )}
