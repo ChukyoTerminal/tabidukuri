@@ -55,11 +55,15 @@ const initialEdges: Edge[] = [
     id: 'A-B',
     source: 'A',
     target: 'B',
+    style: { stroke: '#059669', strokeWidth: 4 },
+    markerEnd: { type: 'arrowclosed', color: '#059669', width: 10, height: 10 }
   },
   {
-    id: 'A-D',
-    source: 'A',
-    target: 'D',
+    id: 'B-C',
+    source: 'B',
+    target: 'C',
+    style: { stroke: '#059669', strokeWidth: 4 },
+    markerEnd: { type: 'arrowclosed', color: '#059669', width: 10, height: 10 },
   },
 ];
  
