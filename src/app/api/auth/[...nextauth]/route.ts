@@ -66,7 +66,9 @@ const authOptions: NextAuthOptions = {
       return false;
     },
     async jwt({ token, user }) {
-      token.id = user.id;
+      if (user && user.id) {
+        token.id = user.id;
+      }
       return token;
     }
   },
