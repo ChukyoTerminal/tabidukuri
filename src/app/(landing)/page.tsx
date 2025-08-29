@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 
+import { signIn } from 'next-auth/react';
+
 import { MPlus2 } from '@/styles/fonts';
 
 import GoogleSigninDarkLogo from '@/public/google_signin_dark.svg';
@@ -49,10 +51,6 @@ export default function Landing() {
 
   const handleCreateRoom = () => { // eslint-disable-line unicorn/consistent-function-scoping
     // TODO
-  };
-
-  const handleGoogleSignIn = () => { // eslint-disable-line unicorn/consistent-function-scoping
-    alert('Googleアカウントでサインインします');
   };
 
   return (
@@ -109,7 +107,7 @@ export default function Landing() {
 
         <div className="mb-2 flex justify-center">
           <button
-            onClick={handleGoogleSignIn}
+            onClick={() => signIn('google')}
             className="py-2 min-h-[48px] max-w-[240px] w-full flex justify-center items-center rounded-lg shadow transition-shadow"
             aria-label="Googleでサインイン"
           >
