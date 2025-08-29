@@ -78,6 +78,8 @@ export default defineConfig([
         {
           allowList: {
             'e': true,
+            'props': true,
+            'Props': true,
             'utils': true,
           }
         },
