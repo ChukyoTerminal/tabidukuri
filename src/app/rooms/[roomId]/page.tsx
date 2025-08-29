@@ -26,7 +26,6 @@ const nodeDefaults = {
 const initialNodes: Node[] = [
   {
     id: 'A',
-    type: 'input',
     position: { x: 0, y: 150 },
     data: { label: 'A' },
     ...nodeDefaults,
@@ -71,7 +70,16 @@ export default function App() {
   const [place, setPlace] = useState('');
 
   const onConnect: OnConnect = useCallback(
-    (parameters) => setEdges((eds) => addEdge(parameters, eds)),
+    (parameters) => {
+      setEdges((eds) => {
+        // sourceまたはtargetが既存エッジで使われていれば追加しない
+        const exists = eds.some(
+          (edge) => edge.source === parameters.source || edge.target === parameters.target
+        );
+        if (exists) return eds;
+        return addEdge(parameters, eds);
+      });
+    },
     [setEdges],
   );
 
