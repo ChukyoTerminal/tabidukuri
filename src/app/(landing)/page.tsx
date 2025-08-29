@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 
-const AppName = 'Tabizukuri.';
+import { MPlus2 } from '@/styles/fonts';
+
+const AppName = 'タビヅクリ';
 
 export default function Landing() {
   const [roomCode, setRoomCode] = useState('');
@@ -96,14 +98,17 @@ export default function Landing() {
         color: isDark ? '#f1f5f9' : '#222',
         transition: 'background 0.2s, color 0.2s',
       }}>
-        <h1 style={{
-          textAlign: 'center',
-          fontWeight: 700,
-          fontSize: 28,
-          color: isDark ? '#38bdf8' : '#0ea5e9',
-          marginBottom: 8,
-          transition: 'color 0.2s',
-        }}>{AppName}</h1>
+        <h1
+          style={{
+            textAlign: 'center',
+            fontWeight: 700,
+            fontSize: 28,
+            color: isDark ? '#38bdf8' : '#0ea5e9',
+            marginBottom: 8,
+            transition: 'color 0.2s',
+          }}
+          className={MPlus2.className}
+        >{AppName}</h1>
         <p style={{
           textAlign: 'center',
           color: isDark ? '#94a3b8' : '#555',
