@@ -68,6 +68,7 @@ export default function App() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [isNodeModalOpen, setIsNodeModalOpen] = useState(false);
   const [place, setPlace] = useState('');
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
 
   const onConnect: OnConnect = useCallback(
     (parameters) => {
@@ -145,6 +146,7 @@ export default function App() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onNodeClick={(_, node) => setSelectedNode(node)}
         fitView
         className="bg-background text-black"
       >
@@ -159,6 +161,19 @@ export default function App() {
       >
         <Plus size={32} className={isNodeModalOpen ? 'transition-transform rotate-45' : 'transition-transform'} />
       </button>
+
+      {/* ノードクリック時の場所表示モーダル */}
+      {selectedNode && (
+        <Modal
+          isOpen={true}
+          onRequestClose={() => setSelectedNode(null)}
+          contentLabel={selectedNode.data?.label as string}
+        >
+          <div>
+            {/* TODO */}
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
