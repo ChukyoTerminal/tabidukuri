@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { Plus } from 'lucide-react';
 import {
   ReactFlow,
   addEdge,
@@ -14,7 +15,9 @@ import {
   type OnConnect,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
- 
+
+import Modal from '@/components/modal';
+
 const nodeDefaults = {
   sourcePosition: Position.Right,
   targetPosition: Position.Left,
@@ -64,6 +67,7 @@ const initialEdges: Edge[] = [
 export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [isNodeModalOpen, setIsNodeModalOpen] = useState(false);
 
   const onConnect: OnConnect = useCallback(
     (parameters) => setEdges((eds) => addEdge(parameters, eds)),
@@ -71,7 +75,17 @@ export default function App() {
   );
 
   return (
-    <div className="w-screen h-screen">
+    <div className="w-screen h-screen relative">
+      {isNodeModalOpen && (
+        <Modal
+          isOpen={isNodeModalOpen}
+          onRequestClose={() => setIsNodeModalOpen(false)}
+          contentLabel="ノード追加"
+        >
+          <h2 className="text-lg font-bold">ノードを追加</h2>
+          {/* ノード追加フォーム */}
+        </Modal>
+      )}
       <header className="fixed top-0 left-0 w-full p-4 bg-sky-500 shadow-md z-10">
         <h1>React Flow Example</h1>
       </header>
@@ -87,6 +101,14 @@ export default function App() {
         <MiniMap />
         <Controls />
       </ReactFlow>
+      <button
+        type="button"
+        aria-label="ノード追加"
+        onClick={() => setIsNodeModalOpen((pre) => !pre)}
+        className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-sky-500 hover:bg-sky-600 text-white rounded-full shadow-lg p-4 flex items-center justify-center z-20"
+      >
+        <Plus size={32} className={isNodeModalOpen ? 'transition-transform rotate-45' : 'transition-transform'} />
+      </button>
     </div>
   );
 }
