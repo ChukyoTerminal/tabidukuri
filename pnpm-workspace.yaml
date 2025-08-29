@@ -1,4 +1,9 @@
 onlyBuiltDependencies:
+  - '@prisma/client'
+  - '@prisma/engines'
   - '@tailwindcss/oxide'
+  - core-js
+  - nodejs-snowflake
+  - prisma
   - sharp
   - unrs-resolver

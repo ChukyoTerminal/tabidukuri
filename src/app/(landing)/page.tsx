@@ -1,8 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
+
+import { signIn } from 'next-auth/react';
 
 import { MPlus2 } from '@/styles/fonts';
+
+import GoogleSigninDarkLogo from '@/public/google_signin_dark.svg';
+import GoogleSigninLightLogo from '@/public/google_signin_light.svg';
 
 const AppName = 'タビヅクリ';
 
@@ -45,10 +51,6 @@ export default function Landing() {
 
   const handleCreateRoom = () => { // eslint-disable-line unicorn/consistent-function-scoping
     // TODO
-  };
-
-  const handleGoogleSignIn = () => { // eslint-disable-line unicorn/consistent-function-scoping
-    alert('Googleアカウントでサインインします');
   };
 
   return (
@@ -103,17 +105,16 @@ export default function Landing() {
 
         <hr className={`my-8 border-0 border-t transition-colors ${isDark ? 'border-slate-700' : 'border-sky-100'}`} />
 
-        <div className="mb-2 text-center">
+        <div className="mb-2 flex justify-center">
           <button
-            onClick={handleGoogleSignIn}
-            className={`w-full flex justify-center items-center rounded-lg shadow transition-shadow
-              ${isDark ? 'bg-slate-700' : 'bg-white'} `}
+            onClick={() => signIn('google')}
+            className="py-2 min-h-[48px] max-w-[240px] w-full flex justify-center items-center rounded-lg shadow transition-shadow"
             aria-label="Googleでサインイン"
           >
-            <img
-              src="/images/google.button.png"
+            <Image
+              src={isDark ? GoogleSigninDarkLogo : GoogleSigninLightLogo}
               alt="Googleでサインイン"
-              className={`w-full max-w-[320px] h-auto block rounded-lg transition-all ${isDark ? 'filter brightness-90 contrast-125' : ''}`}
+              className="w-full h-auto block transition-all"
             />
           </button>
         </div>
