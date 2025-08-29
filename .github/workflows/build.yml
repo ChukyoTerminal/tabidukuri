@@ -35,4 +35,4 @@ jobs:
           sudo npm install -g pnpm
           pnpm install
       - name: Run build
-        run: pnpm build --debug --no-lint
+        run: pnpm build:dev

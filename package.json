@@ -4,12 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "pnpm prisma:generate && next dev --turbopack",
-    "build": "pnpm prisma:generate && next build",
+    "build": "pnpm prisma:generate && pnpm prisma:deploy && next build",
+    "build:dev": "next build --debug --no-lint",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "prisma": "./scripts/shell/env.sh && prisma",
-    "prisma:generate": "pnpm prisma generate"
+    "prisma:generate": "pnpm prisma generate",
+    "prisma:deploy": "pnpm prisma migrate deploy"
   },
   "dependencies": {
     "@next/third-parties": "^15.4.6",
