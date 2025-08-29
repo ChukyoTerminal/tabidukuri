@@ -31,7 +31,7 @@ enum TransportationType {
 }
 
 model User {
-  id        BigInt   @id // Snowflake
+  id        String   @id @default(cuid())
   email     String   @unique
   name      String
   imageHash String?  @map("image_hash")
@@ -52,8 +52,8 @@ model User {
 }
 
 model Room {
-  id          BigInt   @id // Snowflake
-  ownerId     BigInt   @map("owner_id")
+  id          String   @id @default(cuid())
+  ownerId     String   @map("owner_id")
   name        String
   description String?
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
@@ -70,9 +70,9 @@ model Room {
 }
 
 model RoomMember {
-  id        BigInt   @id // Snowflake
-  userId    BigInt   @map("user_id")
-  roomId    BigInt   @map("room_id")
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  roomId    String   @map("room_id")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
@@ -84,9 +84,9 @@ model RoomMember {
 }
 
 model RoomInvitation {
-  id          BigInt   @id // Snowflake
+  id          String   @id @default(cuid())
   code        String   @unique
-  roomId      BigInt   @map("room_id")
+  roomId      String   @map("room_id")
   targetEmail String?  @map("target_email")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
@@ -97,9 +97,9 @@ model RoomInvitation {
 }
 
 model RoomComment {
-  id        BigInt   @id // Snowflake
-  roomId    BigInt   @map("room_id")
-  authorId  BigInt   @map("author_id")
+  id        String   @id @default(cuid())
+  roomId    String   @map("room_id")
+  authorId  String   @map("author_id")
   content   String
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
@@ -111,9 +111,9 @@ model RoomComment {
 }
 
 model RoomNote {
-  id        BigInt   @id // Snowflake
-  roomId    BigInt   @map("room_id")
-  authorId  BigInt   @map("author_id")
+  id        String   @id @default(cuid())
+  roomId    String   @map("room_id")
+  authorId  String   @map("author_id")
   type      NoteType
   title     String
   content   String?
@@ -127,8 +127,8 @@ model RoomNote {
 }
 
 model Node {
-  id          BigInt   @id // Snowflake
-  roomId      BigInt   @map("room_id")
+  id          String   @id @default(cuid())
+  roomId      String   @map("room_id")
   name        String
   description String?
   x           Float    @default(0) @map("x_coordinate")
@@ -146,9 +146,9 @@ model Node {
 }
 
 model NodeComment {
-  id        BigInt   @id // Snowflake
-  nodeId    BigInt   @map("node_id")
-  authorId  BigInt   @map("author_id")
+  id        String   @id @default(cuid())
+  nodeId    String   @map("node_id")
+  authorId  String   @map("author_id")
   content   String
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
@@ -160,9 +160,9 @@ model NodeComment {
 }
 
 model NodeNote {
-  id        BigInt   @id // Snowflake
-  nodeId    BigInt   @map("node_id")
-  authorId  BigInt   @map("author_id")
+  id        String   @id @default(cuid())
+  nodeId    String   @map("node_id")
+  authorId  String   @map("author_id")
   type      NoteType
   title     String
   content   String?
@@ -176,11 +176,11 @@ model NodeNote {
 }
 
 model TransportationHop {
-  id        BigInt             @id // Snowflake
+  id        String             @id @default(cuid())
   type      TransportationType
   from      String
   to        String
-  nextHopId BigInt?            @unique @map("next_hop_id")
+  nextHopId String?            @unique @map("next_hop_id")
   createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
@@ -192,10 +192,10 @@ model TransportationHop {
 }
 
 model Edge {
-  id                  BigInt   @id // Snowflake
-  fromNodeId          BigInt   @map("from_node_id")
-  toNodeId            BigInt   @map("to_node_id")
-  transportationHopId BigInt?  @unique @map("transportation_hop_id")
+  id                  String   @id @default(cuid())
+  fromNodeId          String   @map("from_node_id")
+  toNodeId            String   @map("to_node_id")
+  transportationHopId String?  @unique @map("transportation_hop_id")
   createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt           DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
@@ -209,9 +209,9 @@ model Edge {
 }
 
 model EdgeComment {
-  id        BigInt   @id // Snowflake
-  edgeId    BigInt   @map("edge_id")
-  authorId  BigInt   @map("author_id")
+  id        String   @id @default(cuid())
+  edgeId    String   @map("edge_id")
+  authorId  String   @map("author_id")
   content   String
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
@@ -223,9 +223,9 @@ model EdgeComment {
 }
 
 model EdgeNote {
-  id        BigInt   @id // Snowflake
-  edgeId    BigInt   @map("edge_id")
-  authorId  BigInt   @map("author_id")
+  id        String   @id @default(cuid())
+  edgeId    String   @map("edge_id")
+  authorId  String   @map("author_id")
   type      NoteType
   title     String
   content   String?
