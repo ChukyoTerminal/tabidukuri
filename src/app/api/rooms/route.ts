@@ -3,8 +3,8 @@ import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
 import { NextRequest } from 'next/server';
 
-export async function GET(req: NextRequest) {
-  const token = await getToken({ req });
+export async function GET(request: NextRequest) {
+  const token = await getToken({ req: request });
   if (!token) {
     return new Response('Unauthorized', { status: 401 });
   }
@@ -27,13 +27,13 @@ export async function GET(req: NextRequest) {
 }
 
 
-export async function POST(req: NextRequest) {
-  const token = await getToken({ req });
+export async function POST(request: NextRequest) {
+  const token = await getToken({ req: request });
   if (!token) {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const { name, description } = await req.json();
+  const { name, description } = await request.json();
 
   if (!name || name.trim() === '') {
     return new Response('Room name is required', { status: 400 });

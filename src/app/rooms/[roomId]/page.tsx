@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import {
   ReactFlow,
@@ -66,21 +66,27 @@ const initialEdges: Edge[] = [
     markerEnd: { type: 'arrowclosed', color: '#059669', width: 10, height: 10 },
   },
 ];
- 
-type RoomPageProps = { params: { roomId: string } };
-export default async function RoomPage(props: RoomPageProps) {
-  const roomId = props.params.roomId;
-  let room = null;
-  let roomLoading = true;
-  if (roomId) {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/api/rooms/${roomId}`);
-    if (res.ok) {
-      room = await res.json();
-      roomLoading = false;
-    } else {
-      throw new Error(res.statusText);
-    }
-  }
+
+import React from 'react';
+type RoomPageProps = { params: Promise<{ roomId: string }> | { roomId: string } };
+export default function RoomPage(props: RoomPageProps) {
+  // Next.js 14+ paramsはPromiseの場合がある
+  const parameters = typeof props.params === 'object' && 'then' in props.params
+    ? React.use(props.params)
+    : props.params;
+  const roomId = parameters.roomId;
+  const [room, setRoom] = useState<any>(null);
+  const [roomLoading, setRoomLoading] = useState(true);
+  useEffect(() => {
+    if (!roomId) return;
+    setRoomLoading(true);
+    fetch(`/api/rooms/${roomId}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        setRoom(data);
+        setRoomLoading(false);
+      });
+  }, [roomId]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
