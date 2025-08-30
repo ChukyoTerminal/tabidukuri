@@ -256,6 +256,7 @@ export default function RoomPage(props: RoomPageProps) {
           isOpen={isNodeModalOpen}
           onRequestClose={() => setIsNodeModalOpen(false)}
           contentLabel="ノード追加"
+          className={isDark ? '' : '!bg-sky-200 text-black'}
         >
           <form className="flex flex-col gap-4 relative pb-20" onSubmit={e => {
             e.preventDefault();
@@ -326,28 +327,10 @@ export default function RoomPage(props: RoomPageProps) {
           isOpen={true}
           onRequestClose={() => setSelectedNode(null)}
           contentLabel={selectedNode.data?.label as string}
+          className={isDark ? '' : '!bg-sky-200 text-black'}
         >
           <div className={`p-4 ${isDark ? 'bg-slate-800 text-slate-100' : ''}`}>
             <div className={isDark ? 'text-slate-400' : 'text-gray-700'}>{selectedNode.data?.description as string}</div>
-            <button
-              type="button"
-              className={`mt-6 px-6 py-2 rounded-xl font-bold shadow border-2 transition-colors ${isDark ? 'bg-red-600 hover:bg-red-700 text-white border-slate-700' : 'bg-red-500 hover:bg-red-600 text-white border-white'}`}
-              onClick={async () => {
-                if (!selectedNode?.id) return;
-                try {
-                  const res = await fetch(`/api/rooms/${roomId}/nodes/${selectedNode.id}`, {
-                    method: 'DELETE',
-                  });
-                  if (!res.ok) throw new Error('ノード削除失敗');
-                  setNodes(nds => nds.filter(n => n.id !== selectedNode.id));
-                  setSelectedNode(null);
-                } catch (e) {
-                  alert('ノード削除に失敗しました');
-                }
-              }}
-            >
-              削除
-            </button>
           </div>
         </Modal>
       )}
@@ -358,6 +341,7 @@ export default function RoomPage(props: RoomPageProps) {
           isOpen={true}
           onRequestClose={() => setSelectedEdge(null)}
           contentLabel={selectedEdge.id}
+          className={isDark ? '' : '!bg-sky-200 text-black'}
         >
           <div className={`p-4 ${isDark ? 'bg-slate-800 text-slate-100' : ''}`}>
             <div className={`font-bold mb-2 ${isDark ? 'text-sky-300' : 'text-sky-600'}`}>エッジ情報</div>
