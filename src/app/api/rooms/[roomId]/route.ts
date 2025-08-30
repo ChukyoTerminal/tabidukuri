@@ -1,8 +1,8 @@
 import { prisma } from '@/lib/prisma';
 
 
-export async function GET(request: Request, { params }: { params: { roomId: string } }) {
-  const { roomId } = params;
+export async function GET(request: Request, { params }: { params: Promise<{ roomId: string }> }) {
+  const { roomId } = await params;
 
   const room = await prisma.room.findUnique({
     select: {
@@ -26,8 +26,8 @@ export async function GET(request: Request, { params }: { params: { roomId: stri
   });
 }
 
-export async function PATCH(request: Request, { params }: { params: { roomId: string } }) {
-  const { roomId } = params;
+export async function PATCH(request: Request, { params }: { params: Promise<{ roomId: string }> }) {
+  const { roomId } = await params;
   const body = await request.json();
   const { name, description } = body;
 
@@ -50,8 +50,8 @@ export async function PATCH(request: Request, { params }: { params: { roomId: st
   });
 }
 
-export async function DELETE(request: Request, { params }: { params: { roomId: string } }) {
-  const { roomId } = params;
+export async function DELETE(request: Request, { params }: { params: Promise<{ roomId: string }> }) {
+  const { roomId } = await params;
 
   const room = await prisma.room.findUnique({
     where: { id: roomId },

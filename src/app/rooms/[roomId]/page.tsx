@@ -67,7 +67,21 @@ const initialEdges: Edge[] = [
   },
 ];
  
-export default function App() {
+type RoomPageProps = { params: { roomId: string } };
+export default async function RoomPage(props: RoomPageProps) {
+  const roomId = props.params.roomId;
+  let room = null;
+  let roomLoading = true;
+  if (roomId) {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ''}/api/rooms/${roomId}`);
+    if (res.ok) {
+      room = await res.json();
+      roomLoading = false;
+    } else {
+      throw new Error(res.statusText);
+    }
+  }
+
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [isNodeModalOpen, setIsNodeModalOpen] = useState(false);
@@ -143,7 +157,7 @@ export default function App() {
         </Modal>
       )}
       <header className="fixed top-0 left-0 w-full p-4 bg-sky-500 shadow-md z-10">
-        <h1>React Flow Example</h1>
+        <h1>{room?.name}</h1>
       </header>
       <ReactFlow
         nodes={nodes}
