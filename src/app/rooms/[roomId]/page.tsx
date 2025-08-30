@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import React from 'react';
 import { Plus } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import {
   ReactFlow,
   addEdge,
@@ -75,6 +76,10 @@ const initialEdges: Edge[] = [
 
 type RoomPageProps = { params: Promise<{ roomId: string }> | { roomId: string } };
 export default function RoomPage(props: RoomPageProps) {
+  // ドラッグ中ノードID
+  const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
+  // ゴミ箱ホバー状態
+  const [isTrashHover, setIsTrashHover] = useState(false);
   // ダークモード判定
   const [isDark, setIsDark] = useState(false);
   useEffect(() => {
@@ -127,7 +132,6 @@ export default function RoomPage(props: RoomPageProps) {
   // ノード位置変更時にAPIへPATCH
   const onNodesChange = useCallback((changes: NodeChange[]) => {
     _onNodesChange(changes);
-    // 位置変更イベントのみ抽出
     changes.forEach(change => {
       if (change.type === 'position' && change.position && change.id) {
         fetch(`/api/rooms/${roomId}/nodes/${change.id}`, {
@@ -138,6 +142,25 @@ export default function RoomPage(props: RoomPageProps) {
       }
     });
   }, [_onNodesChange, roomId]);
+
+  // ノードドラッグ検知
+  const handleNodeDragStart = useCallback((event: React.MouseEvent, node: Node) => {
+    setDraggingNodeId(node.id);
+  }, []);
+  const handleNodeDragStop = useCallback((event: React.MouseEvent, node: Node) => {
+    if (isTrashHover && draggingNodeId) {
+      fetch(`/api/rooms/${roomId}/nodes/${draggingNodeId}`, {
+        method: 'DELETE',
+      }).then(res => {
+        if (res.ok) setNodes(nds => nds.filter(n => n.id !== draggingNodeId));
+        setDraggingNodeId(null);
+        setIsTrashHover(false);
+      });
+    } else {
+      setDraggingNodeId(null);
+      setIsTrashHover(false);
+    }
+  }, [isTrashHover, draggingNodeId, roomId]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([] as Edge[]);
   const [isNodeModalOpen, setIsNodeModalOpen] = useState(false);
   const [place, setPlace] = useState('');
@@ -202,21 +225,28 @@ export default function RoomPage(props: RoomPageProps) {
             onConnect={onConnect}
             onNodeClick={(_, node) => setSelectedNode(node)}
             onEdgeClick={(_, edge) => setSelectedEdge(edge)}
+            onNodeDragStart={handleNodeDragStart}
+            onNodeDragStop={handleNodeDragStop}
             fitView
             className={isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 text-black' : 'bg-gradient-to-br from-sky-50 to-teal-100 text-black'}
           >
             <MiniMap />
             <Controls />
           </ReactFlow>
-          {/* ノード追加ボタン */}
-          <button
-            type="button"
-            aria-label="ノード追加"
-            onClick={() => setIsNodeModalOpen((pre) => !pre)}
-            className={`absolute bottom-8 left-1/2 -translate-x-1/2 rounded-full shadow-lg p-5 flex items-center justify-center z-30 border-4 ${isDark ? 'bg-sky-400 hover:bg-sky-600 text-white border-slate-800' : 'bg-sky-500 hover:bg-sky-600 text-white border-white'}`}
+          {/* ノード追加/ゴミ箱ボタン */}
+          <div
+            className={`absolute bottom-8 left-1/2 -translate-x-1/2 rounded-full shadow-lg p-5 flex items-center justify-center z-30 border-4 cursor-pointer transition-colors ${draggingNodeId ? (isTrashHover ? 'bg-red-600 border-red-800' : 'bg-red-400 border-red-800') : (isDark ? 'bg-sky-400 hover:bg-sky-600 text-white border-slate-800' : 'bg-sky-500 hover:bg-sky-600 text-white border-white')}`}
+            onClick={() => !draggingNodeId && setIsNodeModalOpen((pre) => !pre)}
+            onMouseEnter={() => draggingNodeId && setIsTrashHover(true)}
+            onMouseLeave={() => draggingNodeId && setIsTrashHover(false)}
+            style={{ width: 64, height: 64 }}
           >
-            <Plus size={36} className={isNodeModalOpen ? 'transition-transform rotate-45' : 'transition-transform'} />
-          </button>
+            {draggingNodeId ? (
+              <Trash2 size={36} className={isTrashHover ? 'animate-bounce text-white' : 'text-white'} />
+            ) : (
+              <Plus size={36} className={isNodeModalOpen ? 'transition-transform rotate-45' : 'transition-transform'} />
+            )}
+          </div>
         </div>
       </main>
 
