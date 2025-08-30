@@ -65,6 +65,7 @@ model Room {
   comments    RoomComment[]    @relation("RoomComment")
   notes       RoomNote[]       @relation("RoomNote")
   nodes       Node[]           @relation("RoomNode")
+  edges       Edge[]           @relation("RoomEdge")
 
   @@map("rooms")
 }
@@ -193,12 +194,14 @@ model TransportationHop {
 
 model Edge {
   id                  String   @id @default(cuid())
+  roomId              String   @map("room_id")
   fromNodeId          String   @map("from_node_id")
   toNodeId            String   @map("to_node_id")
   transportationHopId String?  @unique @map("transportation_hop_id")
   createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt           DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz()
 
+  room              Room               @relation("RoomEdge", fields: [roomId], references: [id])
   fromNode          Node               @relation("EdgeFromNode", fields: [fromNodeId], references: [id])
   toNode            Node               @relation("EdgeToNode", fields: [toNodeId], references: [id])
   transportationHop TransportationHop? @relation("TransportationHop", fields: [transportationHopId], references: [id])

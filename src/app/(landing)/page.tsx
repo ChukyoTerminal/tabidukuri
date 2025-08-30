@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 import { signIn } from 'next-auth/react';
 
+import Modal from '@/components/modal';
 import { MPlus2 } from '@/styles/fonts';
 
 import GoogleSigninDarkLogo from '@/public/google_signin_dark.svg';
@@ -13,8 +15,13 @@ import GoogleSigninLightLogo from '@/public/google_signin_light.svg';
 const AppName = 'タビヅクリ';
 
 export default function Landing() {
+  const router = useRouter();
   const [roomCode, setRoomCode] = useState('');
   const [isDark, setIsDark] = useState(false);
+  // 部屋作成モーダル用state
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newRoomName, setNewRoomName] = useState('');
+  const [newRoomDesc, setNewRoomDesc] = useState('');
 
   // 初期表示時にlocalStorage/システム設定を反映
   useEffect(() => {
@@ -49,8 +56,8 @@ export default function Landing() {
     alert(`部屋コード「${roomCode}」で参加します`);
   };
 
-  const handleCreateRoom = () => { // eslint-disable-line unicorn/consistent-function-scoping
-    // TODO
+  const handleCreateRoom = () => {  
+    setIsCreateModalOpen(true);
   };
 
   return (
@@ -102,6 +109,78 @@ export default function Landing() {
             部屋を作成
           </button>
         </div>
+
+        {/* 部屋作成モーダル */}
+        {isCreateModalOpen && (
+          <Modal
+            isOpen={isCreateModalOpen}
+            onRequestClose={() => setIsCreateModalOpen(false)}
+            contentLabel="部屋作成"
+          >
+            <form className="flex flex-col gap-4" onSubmit={async e => {
+              e.preventDefault();
+              // 部屋作成API呼び出し
+              try {
+                const res = await fetch('/api/rooms', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ name: newRoomName, description: newRoomDesc })
+                });
+                if (res.ok) {
+                  const newRoom = await res.json();
+                  setIsCreateModalOpen(false);
+                  setNewRoomName('');
+                  setNewRoomDesc('');
+                  // 部屋ページへリダイレクト
+                  if (newRoom?.id) {
+                    router.push(`/rooms/${newRoom.id}`);
+                  }
+                } else {
+                  const error = await res.text();
+                  alert('部屋作成に失敗しました: ' + error);
+                }
+              } catch {
+                alert('部屋作成に失敗しました');
+              }
+            }}>
+              <label className="flex flex-col gap-1">
+                <span className="text-sm font-medium">部屋名</span>
+                <input
+                  type="text"
+                  name="roomName"
+                  placeholder="部屋名を入力"
+                  className="border rounded px-3 py-2 focus:outline-none focus:ring focus:border-sky-500"
+                  value={newRoomName}
+                  onChange={e => setNewRoomName(e.target.value)}
+                  required
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-sm font-medium">説明</span>
+                <textarea
+                  name="roomDesc"
+                  placeholder="説明を入力（任意）"
+                  rows={3}
+                  className="border rounded px-3 py-2 focus:outline-none focus:ring focus:border-sky-500"
+                  value={newRoomDesc}
+                  onChange={e => setNewRoomDesc(e.target.value)}
+                />
+              </label>
+              <div className="flex gap-2 justify-end mt-2">
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 text-gray-800"
+                  onClick={() => setIsCreateModalOpen(false)}
+                >キャンセル</button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded bg-sky-500 hover:bg-sky-600 text-white font-bold"
+                  disabled={!newRoomName}
+                >作成</button>
+              </div>
+            </form>
+          </Modal>
+        )}
 
         <hr className={`my-8 border-0 border-t transition-colors ${isDark ? 'border-slate-700' : 'border-sky-100'}`} />
 
