@@ -143,12 +143,47 @@ export default function RoomPage(props: RoomPageProps) {
     });
   }, [_onNodesChange, roomId]);
 
-  // ノードドラッグ検知
-  const handleNodeDragStart = useCallback((event: React.MouseEvent, node: Node) => {
+  // ノードドラッグ検知（マウス・タッチ両対応）
+  const handleNodeDragStart = useCallback((event: React.MouseEvent | React.TouchEvent, node: Node) => {
     setDraggingNodeId(node.id);
+    // タッチデバイスの場合、ゴミ箱領域に指が乗っているか判定
+    if ('touches' in event && event.touches.length > 0) {
+      const touch = event.touches[0];
+      const trash = document.getElementById('trash-btn');
+      if (trash) {
+        const rect = trash.getBoundingClientRect();
+        if (
+          touch.clientX >= rect.left &&
+          touch.clientX <= rect.right &&
+          touch.clientY >= rect.top &&
+          touch.clientY <= rect.bottom
+        ) {
+          setIsTrashHover(true);
+        }
+      }
+    }
   }, []);
-  const handleNodeDragStop = useCallback((event: React.MouseEvent, node: Node) => {
-    if (isTrashHover && draggingNodeId) {
+  const handleNodeDragStop = useCallback((event: React.MouseEvent | React.TouchEvent, node: Node) => {
+    let trashHover = isTrashHover;
+    // タッチデバイスの場合、指がゴミ箱領域にあるか判定
+    if ('changedTouches' in event && event.changedTouches.length > 0) {
+      const touch = event.changedTouches[0];
+      const trash = document.getElementById('trash-btn');
+      if (trash) {
+        const rect = trash.getBoundingClientRect();
+        if (
+          touch.clientX >= rect.left &&
+          touch.clientX <= rect.right &&
+          touch.clientY >= rect.top &&
+          touch.clientY <= rect.bottom
+        ) {
+          trashHover = true;
+        } else {
+          trashHover = false;
+        }
+      }
+    }
+    if (trashHover && draggingNodeId) {
       fetch(`/api/rooms/${roomId}/nodes/${draggingNodeId}`, {
         method: 'DELETE',
       }).then(res => {
@@ -235,6 +270,7 @@ export default function RoomPage(props: RoomPageProps) {
           </ReactFlow>
           {/* ノード追加/ゴミ箱ボタン */}
           <div
+            id="trash-btn"
             className={`absolute bottom-8 left-1/2 -translate-x-1/2 rounded-full shadow-lg p-5 flex items-center justify-center z-30 border-4 cursor-pointer transition-colors ${draggingNodeId ? (isTrashHover ? 'bg-red-600 border-red-800' : 'bg-red-400 border-red-800') : (isDark ? 'bg-sky-400 hover:bg-sky-600 text-white border-slate-800' : 'bg-sky-500 hover:bg-sky-600 text-white border-white')}`}
             onClick={() => !draggingNodeId && setIsNodeModalOpen((pre) => !pre)}
             onMouseEnter={() => draggingNodeId && setIsTrashHover(true)}
