@@ -111,9 +111,11 @@ export default function RoomPage(props: RoomPageProps) {
     (async () => {
       if (!roomId) return;
       setRoomLoading(true);
+      // 部屋情報取得
       const roomRes = await fetch(`/api/rooms/${roomId}`);
       const roomData = roomRes.ok ? await roomRes.json() : null;
       setRoom(roomData);
+      // ノード取得
       const nodesRes = await fetch(`/api/rooms/${roomId}/nodes`);
       const nodesData = nodesRes.ok ? await nodesRes.json() : [];
       const initialNodes: Node[] = nodesData.map((node: any) => ({
@@ -123,6 +125,17 @@ export default function RoomPage(props: RoomPageProps) {
         ...nodeDefaults,
       }));
       setNodes(initialNodes);
+      // エッジ取得
+      const edgesRes = await fetch(`/api/rooms/${roomId}/edges`);
+      const edgesData = edgesRes.ok ? await edgesRes.json() : [];
+      const initialEdges: Edge[] = edgesData.map((edge: any) => ({
+        id: edge.id,
+        source: edge.fromNodeId,
+        target: edge.toNodeId,
+        style: { stroke: '#059669', strokeWidth: 4 },
+        markerEnd: { type: 'arrowclosed', color: '#059669', width: 10, height: 10 },
+      }));
+      setEdges(initialEdges);
       setRoomLoading(false);
     })();
   }, [roomId]);
@@ -132,7 +145,7 @@ export default function RoomPage(props: RoomPageProps) {
   // ノード位置変更時にAPIへPATCH
   const onNodesChange = useCallback((changes: NodeChange[]) => {
     _onNodesChange(changes);
-    changes.forEach(change => {
+    for (const change of changes) {
       if (change.type === 'position' && change.position && change.id) {
         fetch(`/api/rooms/${roomId}/nodes/${change.id}`, {
           method: 'PATCH',
@@ -140,7 +153,7 @@ export default function RoomPage(props: RoomPageProps) {
           body: JSON.stringify({ x: change.position.x, y: change.position.y }),
         });
       }
-    });
+    }
   }, [_onNodesChange, roomId]);
 
   // ノードドラッグ検知（マウス・タッチ両対応）
@@ -149,7 +162,7 @@ export default function RoomPage(props: RoomPageProps) {
     // タッチデバイスの場合、ゴミ箱領域に指が乗っているか判定
     if ('touches' in event && event.touches.length > 0) {
       const touch = event.touches[0];
-      const trash = document.getElementById('trash-btn');
+      const trash = document.querySelector('#trash-btn');
       if (trash) {
         const rect = trash.getBoundingClientRect();
         if (
@@ -168,19 +181,13 @@ export default function RoomPage(props: RoomPageProps) {
     // タッチデバイスの場合、指がゴミ箱領域にあるか判定
     if ('changedTouches' in event && event.changedTouches.length > 0) {
       const touch = event.changedTouches[0];
-      const trash = document.getElementById('trash-btn');
+      const trash = document.querySelector('#trash-btn');
       if (trash) {
         const rect = trash.getBoundingClientRect();
-        if (
-          touch.clientX >= rect.left &&
+        trashHover = touch.clientX >= rect.left &&
           touch.clientX <= rect.right &&
           touch.clientY >= rect.top &&
-          touch.clientY <= rect.bottom
-        ) {
-          trashHover = true;
-        } else {
-          trashHover = false;
-        }
+          touch.clientY <= rect.bottom ? true : false;
       }
     }
     if (trashHover && draggingNodeId) {
@@ -203,17 +210,41 @@ export default function RoomPage(props: RoomPageProps) {
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
 
   const onConnect: OnConnect = useCallback(
-    (parameters) => {
+    async (parameters) => {
       setEdges((eds) => {
         // sourceまたはtargetが既存エッジで使われていれば追加しない
         const exists = eds.some(
           (edge) => edge.source === parameters.source || edge.target === parameters.target
         );
         if (exists) return eds;
-        return addEdge(parameters, eds);
+        return eds;
       });
+      try {
+        const res = await fetch(`/api/rooms/${roomId}/edges`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fromNodeId: parameters.source, toNodeId: parameters.target }),
+        });
+        if (!res.ok) {
+          console.error('エッジ作成に失敗しました', await res.text());
+          return;
+        }
+        const newEdge = await res.json();
+        setEdges((eds) => [
+          ...eds,
+          {
+            id: newEdge.id,
+            source: newEdge.fromNodeId,
+            target: newEdge.toNodeId,
+            style: { stroke: '#059669', strokeWidth: 4 },
+            markerEnd: { type: 'arrowclosed', color: '#059669', width: 10, height: 10 },
+          },
+        ]);
+      } catch {
+        alert('エッジ作成に失敗しました');
+      }
     },
-    [setEdges],
+    [setEdges, roomId],
   );
 
   // テーマ切替
@@ -319,7 +350,7 @@ export default function RoomPage(props: RoomPageProps) {
                 }]);
                 setIsNodeModalOpen(false);
                 setPlace('');
-              } catch (e) {
+              } catch {
                 alert('ノード作成に失敗しました');
               }
             })();
@@ -379,11 +410,32 @@ export default function RoomPage(props: RoomPageProps) {
           contentLabel={selectedEdge.id}
           className={isDark ? '' : '!bg-sky-200 text-black'}
         >
-          <div className={`p-4 ${isDark ? 'bg-slate-800 text-slate-100' : ''}`}>
+          <div className={`p-4 flex flex-col gap-2 ${isDark ? 'bg-slate-800 text-slate-100' : ''}`}>
             <div className={`font-bold mb-2 ${isDark ? 'text-sky-300' : 'text-sky-600'}`}>エッジ情報</div>
             <div className="mb-1">ID: <span className="font-mono text-xs">{selectedEdge.id}</span></div>
             <div>Source: <span className="font-mono text-xs">{selectedEdge.source}</span></div>
             <div>Target: <span className="font-mono text-xs">{selectedEdge.target}</span></div>
+            <button
+              type="button"
+              className={`mt-4 px-4 py-2 rounded-lg font-bold border-2 shadow transition-colors ${isDark ? 'bg-red-700 text-white border-red-900 hover:bg-red-800' : 'bg-red-500 text-white border-red-700 hover:bg-red-600'}`}
+              onClick={async () => {
+                try {
+                  const res = await fetch(`/api/rooms/${roomId}/edges/${selectedEdge.id}`, {
+                    method: 'DELETE',
+                  });
+                  if (!res.ok) {
+                    alert('エッジ削除に失敗しました');
+                    return;
+                  }
+                  setEdges(eds => eds.filter(e => e.id !== selectedEdge.id));
+                  setSelectedEdge(null);
+                } catch {
+                  alert('エッジ削除に失敗しました');
+                }
+              }}
+            >
+              削除
+            </button>
           </div>
         </Modal>
       )}

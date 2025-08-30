@@ -1,11 +1,11 @@
 import { prisma } from '@/lib/prisma';
 
 export async function PATCH(
-  req: Request,
+  request: Request,
   { params }: { params: Promise<{ roomId: string; nodeId: string }> }
 ) {
   const { roomId, nodeId } = await params;
-  const { name, description, x, y } = await req.json();
+  const { name, description, x, y } = await request.json();
 
   if (!name && !description && x === undefined && y === undefined) {
     return new Response('One of name, description, x, and y are required', { status: 400 });
@@ -30,14 +30,14 @@ export async function PATCH(
     }
 
     return new Response(JSON.stringify(updatedNode), { status: 200 });
-  } catch (error) {
-    console.error('Error updating node:', error);
+  } catch (e) {
+    console.error('Error updating node:', e);
     return new Response('Internal Server Error', { status: 500 });
   }
 }
 
 export async function DELETE(
-  req: Request,
+  request: Request,
   { params }: { params: Promise<{ roomId: string; nodeId: string }> }
 ) {
   const { roomId, nodeId } = await params;
@@ -51,8 +51,8 @@ export async function DELETE(
     });
 
     return new Response(undefined, { status: 200 });
-  } catch (error) {
-    console.error('Error deleting node:', error);
+  } catch (e) {
+    console.error('Error deleting node:', e);
     return new Response('Internal Server Error', { status: 500 });
   }
 }
