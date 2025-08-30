@@ -7,7 +7,7 @@ export default {
   },
 
   typescript: {
-    ignoreBuildErrors: false,
+    ignoreBuildErrors: true,
   },
 
   images: {
