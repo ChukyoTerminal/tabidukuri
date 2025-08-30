@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import React from 'react';
 import { Plus } from 'lucide-react';
 import {
   ReactFlow,
@@ -10,9 +11,12 @@ import {
   MiniMap,
   Controls,
   Position,
-  type Node,
-  type Edge,
-  type OnConnect,
+} from '@xyflow/react';
+import type {
+  Node,
+  Edge,
+  OnConnect,
+  NodeChange,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -23,6 +27,7 @@ const nodeDefaults = {
   targetPosition: Position.Left,
 };
 
+/*
 const initialNodes: Node[] = [
   {
     id: 'A',
@@ -66,23 +71,23 @@ const initialEdges: Edge[] = [
     markerEnd: { type: 'arrowclosed', color: '#059669', width: 10, height: 10 },
   },
 ];
+*/
 
-import React from 'react';
 type RoomPageProps = { params: Promise<{ roomId: string }> | { roomId: string } };
 export default function RoomPage(props: RoomPageProps) {
   // ダークモード判定
   const [isDark, setIsDark] = useState(false);
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = window.localStorage.getItem('theme-dark');
+    if (globalThis.window !== undefined) {
+      const saved = globalThis.localStorage.getItem('theme-dark');
       if (saved !== null) {
         setIsDark(saved === 'true');
-      } else if (window.matchMedia) {
-        setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
+      } else if (globalThis.matchMedia) {
+        setIsDark(globalThis.matchMedia('(prefers-color-scheme: dark)').matches);
       }
-      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      const mq = globalThis.matchMedia('(prefers-color-scheme: dark)');
       const handler = (e: MediaQueryListEvent) => {
-        if (window.localStorage.getItem('theme-dark') === null) {
+        if (globalThis.localStorage.getItem('theme-dark') === null) {
           setIsDark(e.matches);
         }
       };
@@ -98,18 +103,42 @@ export default function RoomPage(props: RoomPageProps) {
   const [room, setRoom] = useState<any>(null);
   const [roomLoading, setRoomLoading] = useState(true);
   useEffect(() => {
-    if (!roomId) return;
-    setRoomLoading(true);
-    fetch(`/api/rooms/${roomId}`)
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        setRoom(data);
-        setRoomLoading(false);
-      });
+    (async () => {
+      if (!roomId) return;
+      setRoomLoading(true);
+      const roomRes = await fetch(`/api/rooms/${roomId}`);
+      const roomData = roomRes.ok ? await roomRes.json() : null;
+      setRoom(roomData);
+      const nodesRes = await fetch(`/api/rooms/${roomId}/nodes`);
+      const nodesData = nodesRes.ok ? await nodesRes.json() : [];
+      const initialNodes: Node[] = nodesData.map((node: any) => ({
+        id: node.id,
+        position: { x: typeof node.x === 'number' ? node.x : 0, y: typeof node.y === 'number' ? node.y : 0 },
+        data: { label: node.name, description: node.description },
+        ...nodeDefaults,
+      }));
+      setNodes(initialNodes);
+      setRoomLoading(false);
+    })();
   }, [roomId]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, _onNodesChange] = useNodesState([] as Node[]);
+
+  // ノード位置変更時にAPIへPATCH
+  const onNodesChange = useCallback((changes: NodeChange[]) => {
+    _onNodesChange(changes);
+    // 位置変更イベントのみ抽出
+    changes.forEach(change => {
+      if (change.type === 'position' && change.position && change.id) {
+        fetch(`/api/rooms/${roomId}/nodes/${change.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ x: change.position.x, y: change.position.y }),
+        });
+      }
+    });
+  }, [_onNodesChange, roomId]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([] as Edge[]);
   const [isNodeModalOpen, setIsNodeModalOpen] = useState(false);
   const [place, setPlace] = useState('');
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -131,9 +160,9 @@ export default function RoomPage(props: RoomPageProps) {
 
   // テーマ切替
   const handleThemeToggle = () => {
-    setIsDark(prev => {
-      window.localStorage.setItem('theme-dark', (!prev).toString());
-      return !prev;
+    setIsDark(previous => {
+      globalThis.localStorage.setItem('theme-dark', (!previous).toString());
+      return !previous;
     });
   };
 
@@ -200,17 +229,33 @@ export default function RoomPage(props: RoomPageProps) {
         >
           <form className="flex flex-col gap-4 relative pb-20" onSubmit={e => {
             e.preventDefault();
-            if (!place) return;
-            setNodes((nds) => {
-              return [...nds, {
-                id: (nds.length + 1).toString(),
-                position: { x: 0, y: 0 },
-                data: { label: place },
-                ...nodeDefaults,
-              }];
-            });
-            setIsNodeModalOpen(false);
-            setPlace('');
+            const name = e.currentTarget.place.value;
+            const description = e.currentTarget.description.value;
+            if (!name) return;
+            (async () => {
+              try {
+                const res = await fetch(`/api/rooms/${roomId}/nodes`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ name, description }),
+                });
+                if (!res.ok) {
+                  console.error('ノード作成に失敗しました', await res.text());
+                  throw new Error('ノード作成に失敗しました');
+                }
+                const newNode = await res.json();
+                setNodes((nds) => [...nds, {
+                  id: newNode.id,
+                  position: { x: 0, y: 0 },
+                  data: { label: name, description: description },
+                  ...nodeDefaults,
+                }]);
+                setIsNodeModalOpen(false);
+                setPlace('');
+              } catch (e) {
+                alert('ノード作成に失敗しました');
+              }
+            })();
           }}>
             <label className="flex flex-col gap-1">
               <span className={`text-sm font-medium ${isDark ? 'text-sky-300' : ''}`}>場所</span>
@@ -253,8 +298,26 @@ export default function RoomPage(props: RoomPageProps) {
           contentLabel={selectedNode.data?.label as string}
         >
           <div className={`p-4 ${isDark ? 'bg-slate-800 text-slate-100' : ''}`}>
-            <div className={`font-bold text-lg mb-2 ${isDark ? 'text-sky-300' : 'text-sky-600'}`}>{selectedNode.data?.label as string}</div>
-            <div className={isDark ? 'text-slate-400' : 'text-gray-700'}>説明: （未実装）</div>
+            <div className={isDark ? 'text-slate-400' : 'text-gray-700'}>{selectedNode.data?.description as string}</div>
+            <button
+              type="button"
+              className={`mt-6 px-6 py-2 rounded-xl font-bold shadow border-2 transition-colors ${isDark ? 'bg-red-600 hover:bg-red-700 text-white border-slate-700' : 'bg-red-500 hover:bg-red-600 text-white border-white'}`}
+              onClick={async () => {
+                if (!selectedNode?.id) return;
+                try {
+                  const res = await fetch(`/api/rooms/${roomId}/nodes/${selectedNode.id}`, {
+                    method: 'DELETE',
+                  });
+                  if (!res.ok) throw new Error('ノード削除失敗');
+                  setNodes(nds => nds.filter(n => n.id !== selectedNode.id));
+                  setSelectedNode(null);
+                } catch (e) {
+                  alert('ノード削除に失敗しました');
+                }
+              }}
+            >
+              削除
+            </button>
           </div>
         </Modal>
       )}
